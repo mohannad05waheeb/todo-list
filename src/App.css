@@ -1,47 +1,46 @@
 * {
-    margin: 0;
-    padding: 0; 
+  margin: 0;
+  padding: 0; 
 }
 .iconButton {
-    transition: all 0.2s !important;
+  transition: all 0.2s !important;
 }
 .iconButton:hover {
-    background-color:#c5c5c5 !important;
-    box-shadow: 0px 7px 7px rgba(0,0,0,0.4);
+  background-color:#c5c5c5 !important;
+  box-shadow: 0px 7px 7px rgba(0,0,0,0.4);
 }
 .todoCard {
-    transition: all 0.2s !important;        
-}
+  transition: all 0.2s !important;        
+} 
 .todoCard:hover {
-    padding-top: 20px;
-    padding-bottom: 20px ;
-    box-shadow: 0px 7px 7px rgba(0,0,0,0.4);    
+  padding-top: 20px;
+  padding-bottom: 20px ;
+  box-shadow: 0px 7px 7px rgba(0,0,0,0.4);    
 }
 /* Start Custom Fonts */
 @font-face {
-    font-family: Alexandria;
-    src: url('/public/fonts/Alexandria-Regular.ttf');
-    font-weight: normal;
+  font-family: Alexandria;
+  src: url('/public/fonts/Alexandria-Regular.ttf');
+  font-weight: normal;
 }
 @font-face {
-    font-family: Alexandria;
-    src: url('/public/fonts/Alexandria-Bold.ttf');
-    font-weight: bold;
+  font-family: Alexandria;
+  src: url('/public/fonts/Alexandria-Bold.ttf');
+  font-weight: bold;
 }
 @font-face {
-    font-family: Alexandria;
-    src: url('/public/fonts/Alexandria-Black.ttf');
-    font-weight: 900;
+  font-family: Alexandria;
+  src: url('/public/fonts/Alexandria-Black.ttf');
+  font-weight: 900;
 }
 @font-face {
-    font-family: Alexandria;
-    src: url('/public/fonts/Alexandria-Light.ttf');
-    font-weight: 200;
+  font-family: Alexandria;
+  src: url('/public/fonts/Alexandria-Light.ttf');
+  font-weight: 200;
 }
 @media (max-width: 767px) {
-    .iconButton {
-        transform: translateX(30px);        
-    }
+  .iconButton {
+      transform: translateX(30px);        
+  }
 }
 /* End Custom Fonts */
- 

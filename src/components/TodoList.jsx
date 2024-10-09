@@ -8,53 +8,182 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Grid from '@mui/material/Grid';   
 import TextField from "@mui/material/TextField";
 import Button from '@mui/material/Button';
-import { useState , useContext , useEffect } from "react";  
-import todosContext from "../contexts/todosContext"; 
-import { v4 as uuidv4 } from 'uuid';  
+import { useState , useEffect , useMemo } from "react";   
 // Components 
 import Todo from "./Todo"; 
-const TodoList = () => {  
-  const { todos , setTodos } = useContext(todosContext); 
+import { useTodos , useTodosDispatch} from "../contexts/todosContext";
+// Import Dialog 
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle'; 
+import { useToast } from "../Contexts/ToastContext";  
+const TodoList = () => {    
+  const todos = useTodos();    
+  const dispatch = useTodosDispatch();  
+  const { showHideToast } = useToast(); 
   const [titleInput, setTitleInput] = useState('');  
-  const [displayedTodosType , setDisplayedTodosType] = useState('all'); 
+  const [displayedTodosType , setDisplayedTodosType] = useState('all');    
+  const [showDeleteDialog , setShowDeleteDialog] = useState(false); 
+  const [showUpdateDialog , setShowUpdateDialog] = useState(false); 
+  const [dialogTodo , setDialogTodo] = useState(null); 
     // Filteration Arrays
-  const completedTodos = todos.filter((t) => {
-    return t.isCompleted
-  }); 
-  const notcompletedTodos = todos.filter((t) => {
-    return !t.isCompleted
-  }); 
-  let todosToBeRendered = todos;
+    const completedTodos = useMemo(() => {
+      if (todos && Array.isArray(todos.todos)) {
+        return todos.todos.filter((t) => {          
+        return t.isCompleted
+      });    
+    } else {
+      console.error('Expected todos to be an array, but got:', todos);
+      return []; 
+    } 
+  },[todos]); 
+  const notcompletedTodos = useMemo(() => {
+    if (todos && Array.isArray(todos.todos)) {
+      return todos.todos.filter((t) => {      
+        return !t.isCompleted;
+      });
+    } else {
+      console.error('Expected todos to be an array, but got:', todos);
+      return [];
+    }
+  }, [todos]);
+  let todosToBeRendered = todos.todos;
   if (displayedTodosType === "completed") {
      todosToBeRendered = completedTodos;
   } else if (displayedTodosType === 'none-completed') {
     todosToBeRendered = notcompletedTodos;
   } else {
-    todosToBeRendered = todos
+    todosToBeRendered = todos.todos
   };  
-  const todosList = todosToBeRendered.map((t) => {
-    return (<Todo key={t.id} todo={t} />) 
-  })  
   useEffect(() => {
-    const storageTodos = JSON.parse(localStorage.getItem('todos')) ?? [];  
-    setTodos(storageTodos); 
+    dispatch({ type: 'get' })  
   } ,[]);     
-  function handleAddClick() { 
-    const newTodo = {
-      id: uuidv4(),  
-      title: titleInput, 
-      details: '',
-      isCompleted: false,
-    };
-    const updatedTodos = [...todos, newTodo]; 
-    setTodos(updatedTodos);  
-    localStorage.setItem('todos' , JSON.stringify(updatedTodos));
-    setTitleInput('');  
+  {/* Start Event Handlers */}
+  function handleAddClick() {   
+    dispatch({ type: 'added' , payload: {
+      newTitle: titleInput,
+      isCompleted: false 
+    } })
+    setTitleInput(''); 
+    showHideToast('تمت الاضافة بنجاح!');  
   };  
   function changeDisplayedType(e) {
     setDisplayedTodosType(e.target.value);
+  };  
+  function handleDeleteDialogClose() {
+    setShowDeleteDialog(false);
+  };    
+  function opeDeleteDialog(todo) {
+    setDialogTodo(todo);  
+    setShowDeleteDialog(true)
+  }
+  function handleDeleteConfirm() {   
+    dispatch({ type: 'deleted' , payload: dialogTodo })
+    setShowDeleteDialog(false); 
+    showHideToast('تم الحذف بنجاح!')    
+  };     
+  function handleUpdateDialogClose() {
+    setShowUpdateDialog(false);
   }; 
-  return (       
+  function handleUpdateConfirm() { 
+    dispatch({ type: 'updated' , payload: dialogTodo })
+    setShowUpdateDialog(false);  
+    showHideToast('تم التحديث بنجاح!')
+  };
+  function openUpdateDialog(todo) {
+    setDialogTodo(todo); 
+    setShowUpdateDialog(true);
+  }; 
+  {/* End Event Handlers */}    
+  const todosList = Array.isArray(todosToBeRendered) ? (
+    todosToBeRendered.map((t) => {
+      return (
+        <Todo 
+          key={t.id} 
+          todo={t} 
+          showDelete={opeDeleteDialog} 
+          showUpdate={openUpdateDialog} 
+        />
+      );
+    })
+  ) : (
+    <></>
+  )
+  return(
+    <>
+        {/* Start Delete Dialog */}
+        <Dialog
+        style={{ direction: 'rtl' }}
+        onClose={handleDeleteDialogClose}
+        open={showDeleteDialog}   
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          هل انت متاكد من رغبتك في حذف هذه المهمة؟ 
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            لا يمكنك التراجع عن الحذف بعد اتمامه            
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteDialogClose}>اغلاق</Button>
+          <Button autoFocus onClick={handleDeleteConfirm}>
+            نعم ,قم بالحذف 
+          </Button>
+        </DialogActions>
+    </Dialog>      
+    {/* End Delete Dialog */}
+        {/* Start Update Dialog */}
+        <Dialog
+        style={{ direction: 'rtl' }}
+        onClose={handleUpdateDialogClose}
+        open={showUpdateDialog}   
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">تعديل مهمة</DialogTitle>
+        <DialogContent>
+        <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="email"
+            label="عنوان مهمة"            
+            fullWidth
+            variant="standard"
+            value={dialogTodo ? dialogTodo.title : ''}
+            onChange={(e) => {
+              setDialogTodo({...dialogTodo , title: e.target.value})
+            }}
+          />
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="email"
+            label="التفاصيل"             
+            fullWidth
+            variant="standard"
+            value={dialogTodo ? dialogTodo.details : ''}
+            onChange={(e) => { 
+              setDialogTodo({...dialogTodo , details: e.target.value})
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleUpdateDialogClose}>اغلاق</Button>
+          <Button autoFocus onClick={handleUpdateConfirm}>
+             تأكيد 
+          </Button>
+        </DialogActions>
+    </Dialog>    
+    {/* End Update Dialog */}
     <Container maxWidth='sm'>
       <Card sx={{ minWidth: 275 }} style={{
         maxHeight: '80vh',
@@ -111,6 +240,7 @@ const TodoList = () => {
         </CardContent>        
       </Card>    
     </Container>      
-  );
-};
+    </>    
+   )  
+  };
 export default TodoList;
